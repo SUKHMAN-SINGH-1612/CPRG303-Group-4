@@ -1,1 +1,1 @@
-# Lab Assignment 2: Layout Components
+# Lab Assignment 3: Props and State Management
