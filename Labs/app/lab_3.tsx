@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { View, Text } from 'react-native';
 import IncrementButton from './components/IncrementButton';
 import DecrementButton from './components/DecrementButton';
 
@@ -9,11 +10,11 @@ const Lab3 = () => {
   const decrement = () => setCounter(counter - 1);
 
   return (
-    <div>
-      <h1>Counter: {counter}</h1>
+    <View>
+      <Text>Counter: {counter}</Text>
       <IncrementButton increment={increment} />
       <DecrementButton decrement={decrement} />
-    </div>
+    </View>
   );
 };
 
