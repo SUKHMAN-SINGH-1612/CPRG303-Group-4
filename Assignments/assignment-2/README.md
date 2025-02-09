@@ -1,50 +1,67 @@
-# Welcome to your Expo app 👋
+# Expo Sign-In and Navigation Assignment
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Assignment Description  
+This assignment involves creating an Expo application with a sign-in form, input validation, navigation, and dynamic content display. Key tasks include:  
+- Setting up Expo navigation.  
+- Validating username/password using regex.  
+- Storing and checking credentials from `credentials.json`.  
+- Implementing a welcome screen with tabs for Calgary and Edmonton.  
+- Using reusable components for city links and styled information sections.  
 
-## Get started
+## Team Members  
+- **Member 1:** [Sukhman](https://github.com/SUKHMAN-SINGH-1612)  
+- **Member 2:** [Aleena](https://github.com/Aleenaali24)  
+- **Member 3:** [Zarish](https://github.com/zarishbilal)  
 
-1. Install dependencies
+## Features Implemented  
+- **Sign-In Form**:  
+  - Input fields for username and password with real-time validation.  
+  - Regex checks for username (≥5 characters) and password complexity (≥8 chars, uppercase, lowercase, number, special character).  
+  - Error messages for invalid inputs or mismatched credentials.  
 
+- **Navigation**:  
+  - Redirect to a welcome screen on successful sign-in.  
+  - Tabs for Calgary and Edmonton, each displaying city images, information, and clickable links.  
+
+- **Reusable Components**:  
+  - `CityLink`: Component for clickable text linking to city webpages, using props for URL and label.  
+  - `CityInfo`: Styled component to display city-specific details (e.g., population, attractions).  
+
+- **Styling**:  
+  - Clean and responsive UI for forms and welcome screens.  
+
+## Setup and Installation  
+1. **Clone the Repository**:  
+   ```bash  
+   git clone https://github.com/SUKHMAN-SINGH-1612/cprg303-assignment02  
+   cd cprg303-assignment02
+2. **Installing the dependencies**:
    ```bash
    npm install
-   ```
-
-2. Start the app
-
+3. **Start the expo server**:
    ```bash
-    npx expo start
-   ```
+   npm start
+4. **Credentials Setup**:
+   Ensure ```credentials.json``` is placed in the project root with username-password pairs.
 
-In the output, you'll find options to open the app in a
+## Navigation and Components
+1. Welcome Screen:
+    - Displays "Welcome to My New App" and city tabs.
+    - Tabs switch between Calgary and Edmonton content dynamically.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+2. CityLink Component:
+    - Props: url (city webpage) and label ("go to city page").
+    - Opens the URL in a browser on click.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+3. CityInfo Component:
+    - Props: cityName, population, attractions, etc.
+    - Consistently styled layout for city details.
 
-## Get a fresh project
+## GitHub Repository
+- Link: [GitHub Repository](https://github.com/SUKHMAN-SINGH-1612/CPRG303-Group-4/edit/main/Assignments/assignment-2)
+- Commits: Each team member contributed with at least 2 commits.
+- Collaboration: Code reviewed and merged via pull requests.
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Submission
+- The GitHub repository link has been submitted via D2L.
+- This project adheres to SAIT’s Academic Conduct policies (A.C.3.4.3).
