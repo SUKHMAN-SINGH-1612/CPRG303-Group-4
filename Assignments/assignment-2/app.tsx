@@ -7,7 +7,7 @@ const App = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    // Handle sign-in logic here
+    // Handle sign-in logic herei
     console.log('Username:', username);
     console.log('Password:', password);
   };
