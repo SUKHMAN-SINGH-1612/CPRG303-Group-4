@@ -7,6 +7,9 @@ const SignInScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter(); // Navigation via expo-router
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
 
   const validateInput = () => {
     if (username.trim().length < 5) {
@@ -17,7 +20,13 @@ const SignInScreen = () => {
     const user = credentials.users.find(
       (user) => user.username === username && user.password === password
     );
-
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        'Validation Error',
+        'Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      );
+      return false;
+    }
     if (!user) {
       Alert.alert('Validation Error', 'Invalid username or password.');
       return false;
