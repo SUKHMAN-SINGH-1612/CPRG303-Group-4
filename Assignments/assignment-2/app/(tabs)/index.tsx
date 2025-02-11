@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import credentials from '../../credentials.json';
 
 const App = () => {
   const [username, setUsername] = useState('');
@@ -27,10 +28,20 @@ const App = () => {
     return true;
   };
 
+  // Function to check if the credentials match
+  const checkCredentials = () => {
+    return credentials.users.some(
+      (user) => user.username === username && user.password === password
+    );
+  };
+
   const handleSubmit = () => {
     if (validateInput()) {
-      // Handle sign-in logic here if validation passes
-      Alert.alert('Sign In Successful', `Username: ${username}`);
+      if (checkCredentials()) {
+        Alert.alert('Sign In Successful', `Username: ${username}`);
+      } else {
+        Alert.alert('Sign In Failed', 'Invalid username or password.');
+      }
     }
   };
 
