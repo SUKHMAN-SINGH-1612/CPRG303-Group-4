@@ -1,54 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
-<<<<<<< HEAD
-import * as FileSystem from 'expo-file-system';
-=======
+import { useNavigation } from '@react-navigation/native';
 import credentials from '../../credentials.json';
->>>>>>> bf1d7daa50c7e1215068829aa73064d4320f0808
-
-const App = () => {
+ 
+const SignInScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [users, setUsers] = useState<{ username: string; password: string }[]>([]);
-
-  // Load credentials.json when the app starts
-  useEffect(() => {
-    const loadCredentials = async () => {
-      try {
-        const fileUri = FileSystem.documentDirectory + 'credentials.json';
-        const fileExists = await FileSystem.getInfoAsync(fileUri);
-
-        if (!fileExists.exists) {
-          Alert.alert('Error', 'Credentials file not found.');
-          return;
-        }
-
-        const fileContent = await FileSystem.readAsStringAsync(fileUri);
-        const jsonData = JSON.parse(fileContent);
-
-        if (jsonData.users) {
-          setUsers(jsonData.users);
-        } else {
-          Alert.alert('Error', 'Invalid credentials file format.');
-        }
-      } catch (error) {
-        Alert.alert('Error', 'Failed to load credentials.');
-      }
-    };
-
-    loadCredentials();
-  }, []);
-
-  // Corrected password validation regex
+  const navigation = useNavigation();
+ 
+  // Corrected regex for password validation
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
+ 
+  // Function to validate username and password
   const validateInput = () => {
     if (username.trim().length < 5) {
       Alert.alert('Validation Error', 'Username must be at least 5 characters long.');
       return false;
     }
-
+ 
     if (!passwordRegex.test(password)) {
       Alert.alert(
         'Validation Error',
@@ -56,47 +26,27 @@ const App = () => {
       );
       return false;
     }
-
+ 
     return true;
   };
-
+ 
   // Function to check if the credentials match
   const checkCredentials = () => {
     return credentials.users.some(
       (user) => user.username === username && user.password === password
     );
   };
-
+ 
   const handleSubmit = () => {
-<<<<<<< HEAD
-    if (!validateInput()) {
-      return;
-=======
     if (validateInput()) {
       if (checkCredentials()) {
-        Alert.alert('Sign In Successful', `Username: ${username}`);
+        navigation.navigate('Welcome');
       } else {
         Alert.alert('Sign In Failed', 'Invalid username or password.');
       }
->>>>>>> bf1d7daa50c7e1215068829aa73064d4320f0808
     }
-
-    // Find user in credentials.json
-    const user = users.find((u) => u.username === username);
-
-    if (!user) {
-      Alert.alert('Login Failed', 'Username not found.');
-      return;
-    }
-
-    if (user.password !== password) {
-      Alert.alert('Login Failed', 'Incorrect password.');
-      return;
-    }
-
-    Alert.alert('Login Successful', `Welcome, ${username}!`);
   };
-
+ 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
@@ -119,7 +69,7 @@ const App = () => {
     </View>
   );
 };
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -142,5 +92,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
 });
-
-export default App;
+ 
+export default SignInScreen;
