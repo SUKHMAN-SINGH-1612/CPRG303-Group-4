@@ -21,11 +21,7 @@ This assignment involves creating an Expo application with a sign-in form, input
 
 - **Navigation**:  
   - Redirect to a welcome screen on successful sign-in.  
-  - Tabs for Calgary and Edmonton, each displaying city images, information, and clickable links.  
-
-- **Reusable Components**:  
-  - `CityLink`: Component for clickable text linking to city webpages, using props for URL and label.  
-  - `CityInfo`: Styled component to display city-specific details (e.g., population, attractions).  
+  - Tabs for Calgary and Edmonton, each displaying city images, information, and clickable links.   
 
 - **Styling**:  
   - Clean and responsive UI for forms and welcome screens.  
@@ -46,7 +42,6 @@ This assignment involves creating an Expo application with a sign-in form, input
 
 ## Navigation and Components
 1. Welcome Screen:
-    - Displays "Welcome to My New App" and city tabs.
     - Tabs switch between Calgary and Edmonton content dynamically.
 
 2. CityLink Component:
@@ -54,7 +49,6 @@ This assignment involves creating an Expo application with a sign-in form, input
     - Opens the URL in a browser on click.
 
 3. CityInfo Component:
-    - Props: cityName, population, attractions, etc.
     - Consistently styled layout for city details.
 
 ## GitHub Repository
