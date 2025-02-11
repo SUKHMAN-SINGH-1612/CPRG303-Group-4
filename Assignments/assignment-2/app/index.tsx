@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import credentials from '../credentials.json'; // Import credentials
 
 const SignInScreen = () => {
   const [username, setUsername] = useState('');
@@ -10,6 +9,10 @@ const SignInScreen = () => {
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
+
+  // Regex for password validation
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   const validateInput = () => {
     if (username.trim().length < 5) {
@@ -20,13 +23,7 @@ const SignInScreen = () => {
     const user = credentials.users.find(
       (user) => user.username === username && user.password === password
     );
-    if (!passwordRegex.test(password)) {
-      Alert.alert(
-        'Validation Error',
-        'Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
-      );
-      return false;
-    }
+
     if (!user) {
       Alert.alert('Validation Error', 'Invalid username or password.');
       return false;
@@ -39,7 +36,7 @@ const SignInScreen = () => {
     if (validateInput()) {
       console.log('Username:', username);
       console.log('Password:', password);
-      router.replace('/tabs/calgary');
+      router.replace('/(tabs)/calgary');; // ✅ Navigate to tab layout after sign-in
     }
   };
 

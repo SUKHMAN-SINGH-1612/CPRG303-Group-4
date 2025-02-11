@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, Button, Image, Linking } from 'react-native';
-
+ 
 export default function EdmontonScreen() {
   return (
     <View style={styles.cityContainer}>
       <Text style={styles.cityTitle}>Edmonton</Text>
       <Image
-        source={{ uri: 'https://www.edmonton.ca/sites/default/files/styles/hero_image/public/images/2021-06/edmonton-skyline.jpg' }}
+        source={{ uri: 'https://assets.exploreedmonton.com/images/feature/_1200x630_crop_center-center_none/Edmonton_Skyline_Northern-Lights-AtTheLookout_WEB_211122_162316.jpg' }}
         style={styles.cityImage}
       />
       <Button title="Go to city page" onPress={() => Linking.openURL('https://www.edmonton.ca/')} />
@@ -16,7 +16,7 @@ export default function EdmontonScreen() {
     </View>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   cityContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 20 },
   cityTitle: { fontSize: 24, fontWeight: 'bold', color: '#333', marginBottom: 20 },
