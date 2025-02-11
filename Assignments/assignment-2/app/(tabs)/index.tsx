@@ -1,15 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 const App = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [users, setUsers] = useState<{ username: string; password: string }[]>([]);
 
-  // Corrected regex for password validation
+  // Load credentials.json when the app starts
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        const fileUri = FileSystem.documentDirectory + 'credentials.json';
+        const fileExists = await FileSystem.getInfoAsync(fileUri);
+
+        if (!fileExists.exists) {
+          Alert.alert('Error', 'Credentials file not found.');
+          return;
+        }
+
+        const fileContent = await FileSystem.readAsStringAsync(fileUri);
+        const jsonData = JSON.parse(fileContent);
+
+        if (jsonData.users) {
+          setUsers(jsonData.users);
+        } else {
+          Alert.alert('Error', 'Invalid credentials file format.');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Failed to load credentials.');
+      }
+    };
+
+    loadCredentials();
+  }, []);
+
+  // Corrected password validation regex
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-  // Function to validate username and password
   const validateInput = () => {
     if (username.trim().length < 5) {
       Alert.alert('Validation Error', 'Username must be at least 5 characters long.');
@@ -28,10 +57,24 @@ const App = () => {
   };
 
   const handleSubmit = () => {
-    if (validateInput()) {
-      // Handle sign-in logic here if validation passes
-      Alert.alert('Sign In Successful', `Username: ${username}`);
+    if (!validateInput()) {
+      return;
     }
+
+    // Find user in credentials.json
+    const user = users.find((u) => u.username === username);
+
+    if (!user) {
+      Alert.alert('Login Failed', 'Username not found.');
+      return;
+    }
+
+    if (user.password !== password) {
+      Alert.alert('Login Failed', 'Incorrect password.');
+      return;
+    }
+
+    Alert.alert('Login Successful', `Welcome, ${username}!`);
   };
 
   return (
