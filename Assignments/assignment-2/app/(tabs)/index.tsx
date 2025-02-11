@@ -5,12 +5,13 @@ const App = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  // Regular expression to check password complexity
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  // Corrected regex for password validation
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   // Function to validate username and password
   const validateInput = () => {
-    if (username.length < 5) {
+    if (username.trim().length < 5) {
       Alert.alert('Validation Error', 'Username must be at least 5 characters long.');
       return false;
     }
@@ -18,7 +19,7 @@ const App = () => {
     if (!passwordRegex.test(password)) {
       Alert.alert(
         'Validation Error',
-        'Password must be at least 8 characters long, with one uppercase letter, one lowercase letter, one number, and one special character.'
+        'Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
       );
       return false;
     }
@@ -29,7 +30,7 @@ const App = () => {
   const handleSubmit = () => {
     if (validateInput()) {
       // Handle sign-in logic here if validation passes
-      Alert.alert('Sign In', `Username: ${username}\nPassword: ${password}`);
+      Alert.alert('Sign In Successful', `Username: ${username}`);
     }
   };
 
@@ -41,6 +42,7 @@ const App = () => {
         placeholder="Username"
         value={username}
         onChangeText={setUsername}
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}
@@ -48,6 +50,7 @@ const App = () => {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        autoCapitalize="none"
       />
       <Button title="Sign In" onPress={handleSubmit} />
     </View>
