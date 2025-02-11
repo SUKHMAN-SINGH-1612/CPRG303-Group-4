@@ -1,24 +1,23 @@
+// app/index.tsx (SignIn Screen)
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import credentials from '../../credentials.json';
- 
+import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+
 const SignInScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation();
- 
-  // Corrected regex for password validation
+  const router = useRouter(); // Use the router for navigation
+
+  // Regex for password validation
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
- 
-  // Function to validate username and password
+
   const validateInput = () => {
     if (username.trim().length < 5) {
       Alert.alert('Validation Error', 'Username must be at least 5 characters long.');
       return false;
     }
- 
+
     if (!passwordRegex.test(password)) {
       Alert.alert(
         'Validation Error',
@@ -26,36 +25,28 @@ const SignInScreen = () => {
       );
       return false;
     }
- 
+
     return true;
   };
- 
-  // Function to check if the credentials match
-  const checkCredentials = () => {
-    return credentials.users.some(
-      (user) => user.username === username && user.password === password
-    );
-  };
- 
+
   const handleSubmit = () => {
     if (validateInput()) {
-      if (checkCredentials()) {
-        navigation.navigate('Welcome');
-      } else {
-        Alert.alert('Sign In Failed', 'Invalid username or password.');
-      }
+      // Simulate successful login (you can replace this with actual credential validation)
+      console.log('Username:', username);
+      console.log('Password:', password);
+      router.push('/welcome'); // Navigate to the Welcome screen
     }
   };
- 
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
       <TextInput
         style={styles.input}
         placeholder="Username"
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
+        placeholderTextColor="#888"
       />
       <TextInput
         style={styles.input}
@@ -64,33 +55,31 @@ const SignInScreen = () => {
         onChangeText={setPassword}
         secureTextEntry
         autoCapitalize="none"
+        placeholderTextColor="#888"
       />
-      <Button title="Sign In" onPress={handleSubmit} />
+      <Button title="Sign In" onPress={handleSubmit} color="#4CAF50" />
     </View>
   );
 };
- 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    backgroundColor: '#fff', // Light background
   },
   input: {
     width: '100%',
     padding: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#ccc', // Light border color
     borderRadius: 5,
+    backgroundColor: '#f9f9f9', // Slightly lighter input background
+    color: '#333', // Dark text for readability
   },
 });
- 
+
 export default SignInScreen;
