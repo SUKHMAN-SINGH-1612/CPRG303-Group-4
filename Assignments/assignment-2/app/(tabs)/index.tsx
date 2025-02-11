@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+<<<<<<< HEAD
 import * as FileSystem from 'expo-file-system';
+=======
+import credentials from '../../credentials.json';
+>>>>>>> bf1d7daa50c7e1215068829aa73064d4320f0808
 
 const App = () => {
   const [username, setUsername] = useState('');
@@ -56,9 +60,25 @@ const App = () => {
     return true;
   };
 
+  // Function to check if the credentials match
+  const checkCredentials = () => {
+    return credentials.users.some(
+      (user) => user.username === username && user.password === password
+    );
+  };
+
   const handleSubmit = () => {
+<<<<<<< HEAD
     if (!validateInput()) {
       return;
+=======
+    if (validateInput()) {
+      if (checkCredentials()) {
+        Alert.alert('Sign In Successful', `Username: ${username}`);
+      } else {
+        Alert.alert('Sign In Failed', 'Invalid username or password.');
+      }
+>>>>>>> bf1d7daa50c7e1215068829aa73064d4320f0808
     }
 
     // Find user in credentials.json
