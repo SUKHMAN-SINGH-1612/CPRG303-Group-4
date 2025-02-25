@@ -1,1 +1,1 @@
-# Lab Assignment 4: Props and State Management
+# Lab Assignment 4
