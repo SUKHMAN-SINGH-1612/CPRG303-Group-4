@@ -15,6 +15,9 @@ const Index = () => {
       <TouchableOpacity style={styles.button} onPress={() => router.push('/lab_4')}>
         <Text style={styles.buttonText}>Go to Lab 4</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={() => router.push('/lab5')}>
+        <Text style={styles.buttonText}>Go to Lab 5</Text>
+      </TouchableOpacity>
       <List />
     </View>
   );
