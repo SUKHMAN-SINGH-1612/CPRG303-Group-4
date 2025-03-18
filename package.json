@@ -3,7 +3,10 @@
     "@react-native-picker/picker": "^2.9.0",
     "@react-navigation/stack": "^7.1.1",
     "expo": "^52.0.32",
-    "react-native-select-dropdown": "^4.0.1"
+    "react-native-select-dropdown": "^4.0.1",
+    "react-dom": "18.3.1",
+    "react-native-web": "~0.19.13",
+    "@expo/metro-runtime": "~4.0.1"
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
