@@ -18,6 +18,9 @@ const Index = () => {
       <TouchableOpacity style={styles.button} onPress={() => router.push('/lab5')}>
         <Text style={styles.buttonText}>Go to Lab 5</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={() => router.push('/lab6')}>
+        <Text style={styles.buttonText}>Go to Lab 6</Text>
+      </TouchableOpacity>
       <List />
     </View>
   );
@@ -36,7 +39,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#1330bf', 
+    backgroundColor: '#1319bf', 
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 10, 

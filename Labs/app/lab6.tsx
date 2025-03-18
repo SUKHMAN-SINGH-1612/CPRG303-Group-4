@@ -1,39 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { getAnimals } from '../libs/supabase_crud';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import supabase from '../lib/supabase';
 
-const SampledatabaseDB = () => {
-  const [animals, setAnimals] = useState<any[]>([]);
+const Lab6 = () => {
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        const animalsData = await getAnimals();
-        setAnimals(animalsData);
-      } catch (error) {
-        console.error('Error fetching animals:', error);
-      } finally {
-        setLoading(false);
+    const fetchData = async () => {
+      const { data, error } = await supabase
+        .from('sampledatabase') // Replace with your table name
+        .select('*');
+
+      if (error) {
+        console.error(error);
+      } else {
+        setData(data);
       }
+      setLoading(false);
     };
 
-    fetchAnimals();
+    fetchData();
   }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : animals.length > 0 ? (
-        animals.map((animal) => (
-          <Text key={animal.id} style={styles.animal}>
-            {animal.name} - {animal.breed} - {animal.age} years old
-          </Text>
-        ))
-      ) : (
-        <Text>No animals found.</Text>
-      )}
+      {data.map((item, index) => (
+        <View key={index} style={styles.itemContainer}>
+          {Object.entries(item).map(([key, value]) => (
+            <Text key={key} style={styles.itemText}>{`${key}: ${value}`}</Text>
+          ))}
+        </View>
+      ))}
     </View>
   );
 };
@@ -41,14 +43,24 @@ const SampledatabaseDB = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f8f8f8',
   },
-  animal: {
-    fontSize: 20,
-    marginBottom: 10,
+  itemContainer: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  itemText: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 
-export default SampledatabaseDB;
+export default Lab6;

@@ -12,6 +12,17 @@ const Index = () => {
   const [dayValue, setDayValue] = useState<string>(''); // State for day input
   const [isPickerVisible, setIsPickerVisible] = useState<boolean>(false); // Controls dropdown visibility
   const [isPlaceholderVisible, setIsPlaceholderVisible] = useState<boolean>(true); // Placeholder state
+  const [errorMessage, setErrorMessage] = useState<string>(''); // State for error message
+
+  const handleDayChange = (text: string) => {
+    const day = parseInt(text, 10);
+    if (day > 31) {
+      setErrorMessage('Day cannot be greater than 31');
+    } else {
+      setErrorMessage('');
+      setDayValue(text);
+    }
+  };
 
   return (
     <TouchableOpacity style={styles.container} activeOpacity={1} onPress={Keyboard.dismiss}>
@@ -29,12 +40,16 @@ const Index = () => {
             setIsPlaceholderVisible(dayValue === '');
             Keyboard.dismiss(); 
           }}
-          onChangeText={(text) => setDayValue(text)}
+          onChangeText={handleDayChange}
           keyboardType="numeric"
           returnKeyType="done"
           editable={true} 
         />
       </View>
+
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
 
       {/* Month Picker Dropdown Button */}
       <TouchableOpacity style={styles.pickerButton} onPress={() => setIsPickerVisible(true)}>
@@ -142,6 +157,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     color: '#000', 
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
   },
 });
 
