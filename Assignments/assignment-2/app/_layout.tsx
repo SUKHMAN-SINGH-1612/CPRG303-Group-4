@@ -28,12 +28,11 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={DefaultTheme}>
       <Stack>
         {/* Screen for SignIn */}
         <Stack.Screen name="index" options={{ headerShown: false }} /> 
-        {/* Screen for the tabs */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        {/* Removed the tabs screen */}
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

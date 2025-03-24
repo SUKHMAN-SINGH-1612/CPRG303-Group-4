@@ -1,38 +1,41 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { signIn } from '../../lib/supabase_auth'; // Import the signIn function
 
 const SignInScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter(); // Navigation via expo-router
 
-  // Regex for password validation
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-  const validateInput = () => {
+  const validateInput = async () => {
     if (username.trim().length < 5) {
       Alert.alert('Validation Error', 'Username must be at least 5 characters long.');
       return false;
     }
 
-    if (!passwordRegex.test(password)) {
-      Alert.alert(
-        'Validation Error',
-        'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
-      );
+    // Removed password validation logic
+
+    try {
+      // Attempt to sign in with Supabase credentials
+      const user = await signIn(username, password);
+      if (!user) {
+        Alert.alert('Validation Error', 'Invalid username or password.');
+        return false;
+      }
+    } catch (error) {
+      Alert.alert('Validation Error', 'Error signing in: ' + error);
       return false;
     }
 
     return true;
   };
 
-  const handleSubmit = () => {
-    if (validateInput()) {
+  const handleSubmit = async () => {
+    if (await validateInput()) {
       console.log('Username:', username);
       console.log('Password:', password);
-      router.replace('/(tabs)'); // ✅ Navigate to tab layout after sign-in
+      router.replace('/tabs/landingScreen'); // Restored navigation to landing screen with bottom nav
     }
   };
 
@@ -56,6 +59,11 @@ const SignInScreen = () => {
         placeholderTextColor="#888"
       />
       <Button title="Sign In" onPress={handleSubmit} color="#4CAF50" />
+      <Button
+        title="Sign Up"
+        onPress={() => router.push('/tabs/signup')}
+        color="#2196F3"
+      />
     </View>
   );
 };
