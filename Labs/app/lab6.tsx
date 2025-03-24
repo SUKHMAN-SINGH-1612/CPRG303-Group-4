@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
 import supabase from '../lib/supabase';
 
 const Lab6 = () => {
@@ -29,13 +29,16 @@ const Lab6 = () => {
 
   return (
     <View style={styles.container}>
-      {data.map((item, index) => (
-        <View key={index} style={styles.itemContainer}>
-          {Object.entries(item).map(([key, value]) => (
-            <Text key={key} style={styles.itemText}>{`${key}: ${value}`}</Text>
-          ))}
-        </View>
-      ))}
+      <Text style={styles.header}>Sample Database Records</Text>
+      <ScrollView>
+        {data.map((item, index) => (
+          <View key={index} style={styles.itemContainer}>
+            {Object.entries(item).map(([key, value]) => (
+              <Text key={key} style={styles.itemText}>{`${key}: ${value}`}</Text>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 };
@@ -44,22 +47,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#e0f7fa', // Light cyan background
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#00796b', // Teal color
+    marginBottom: 20,
+    textAlign: 'center',
   },
   itemContainer: {
     marginBottom: 15,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 5,
+    padding: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 3,
+    elevation: 4,
+    borderLeftWidth: 5,
+    borderLeftColor: '#00796b', // Teal accent
   },
   itemText: {
     fontSize: 16,
-    color: '#333',
+    color: '#004d40', // Dark teal color
+    marginBottom: 5,
   },
 });
 
