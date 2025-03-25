@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signIn } from '../../lib/supabase_auth'; // Import the signIn function
+import { signIn } from '../../lib/supabase_auth';
 
 const SignInScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter(); // Navigation via expo-router
+  const router = useRouter();
 
   const validateInput = async () => {
     if (username.trim().length < 5) {
@@ -14,10 +14,7 @@ const SignInScreen = () => {
       return false;
     }
 
-    // Removed password validation logic
-
     try {
-      // Attempt to sign in with Supabase credentials
       const user = await signIn(username, password);
       if (!user) {
         Alert.alert('Validation Error', 'Invalid username or password.');
@@ -33,14 +30,13 @@ const SignInScreen = () => {
 
   const handleSubmit = async () => {
     if (await validateInput()) {
-      console.log('Username:', username);
-      console.log('Password:', password);
-      router.replace('/tabs/landingScreen'); // Restored navigation to landing screen with bottom nav
+      router.replace('/tabs/landingScreen');
     }
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Welcome Back</Text>
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -63,6 +59,7 @@ const SignInScreen = () => {
         title="Sign Up"
         onPress={() => router.push('/tabs/signup')}
         color="#2196F3"
+        style={styles.signUpButton}
       />
     </View>
   );
@@ -74,17 +71,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
   },
   input: {
     width: '100%',
-    padding: 10,
-    marginBottom: 10,
+    padding: 12,
+    marginBottom: 15,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
-    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    backgroundColor: '#fff',
     color: '#333',
+  },
+  signUpButton: {
+    marginTop: 10,
   },
 });
 

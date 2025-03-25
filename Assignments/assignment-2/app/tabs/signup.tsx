@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import { View, TextInput, Button, Alert, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signUp } from '../../lib/supabase_auth'; // Import the signUp function
+import { signUp } from '../../lib/supabase_auth';
 
 const SignUpScreen = () => {
   const [password, setPassword] = useState('');
@@ -34,15 +34,10 @@ const SignUpScreen = () => {
   const handleSignUp = async () => {
     if (validateInput()) {
       try {
-        // Call the signUp function from supabase_auth.ts
         const user = await signUp(email, password);
-
-        // Handle success
-        console.log('User created:', user);
         Alert.alert('Success', 'Account created successfully!');
-        router.replace('/'); // Navigate back to the sign-in screen
+        router.replace('/');
       } catch (error) {
-        // Handle error
         Alert.alert('Error', 'There was an issue creating your account.');
         console.error(error);
       }
@@ -51,6 +46,7 @@ const SignUpScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Create an Account</Text>
       <TextInput
         style={styles.input}
         placeholder="First Name"
@@ -99,6 +95,7 @@ const SignUpScreen = () => {
         title="Back to Sign In"
         onPress={() => router.replace('/')}
         color="#2196F3"
+        style={styles.backButton}
       />
     </View>
   );
@@ -110,17 +107,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
   },
   input: {
     width: '100%',
-    padding: 10,
-    marginBottom: 10,
+    padding: 12,
+    marginBottom: 15,
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
-    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    backgroundColor: '#fff',
     color: '#333',
+  },
+  backButton: {
+    marginTop: 10,
   },
 });
 

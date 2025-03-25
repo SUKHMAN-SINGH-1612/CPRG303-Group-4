@@ -11,26 +11,22 @@ const LandingScreen = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    // Hide the bottom tab bar
     navigation.setOptions({ tabBarStyle: { display: 'none' } });
 
-    // Fetch the user object from Supabase auth using getUser method
     const fetchUserDetails = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (error) {
         console.error('Error fetching user:', error);
       } else if (!data.user) {
-        // Redirect to login if no user is found
         router.replace('/');
       } else {
-        setUserDetails(data.user); // Set the user details if found
+        setUserDetails(data.user);
       }
     };
 
     fetchUserDetails();
 
     return () => {
-      // Restore the bottom tab bar when leaving the screen
       navigation.setOptions({ tabBarStyle: undefined });
     };
   }, []);
@@ -59,9 +55,8 @@ const LandingScreen = () => {
     );
   };
 
-  // Display loading text if user details are not yet loaded
   if (!userDetails) {
-    return <Text>Loading...</Text>;
+    return <Text style={styles.loadingText}>Loading...</Text>;
   }
 
   return (
@@ -69,7 +64,7 @@ const LandingScreen = () => {
       <Text style={styles.welcomeText}>
         Welcome, {userDetails.email}!
       </Text>
-      <Button title="Sign Out" onPress={handleSignOut} color="#2196F3" />
+      <Button title="Sign Out" onPress={handleSignOut} color="#FF5252" />
     </View>
   );
 };
@@ -80,11 +75,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f5f5f5',
   },
   welcomeText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '600',
     marginBottom: 20,
+    color: '#333',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#888',
   },
 });
 
