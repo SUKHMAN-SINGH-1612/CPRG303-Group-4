@@ -92,3 +92,32 @@ export const deleteUser = async (uuid: string) => {
     throw error;
   }
 };
+
+// CREATE: Add a new transaction to the `transactions` table
+export const createTransaction = async (
+  userId: string,
+  amount: number,
+  categoryId: string,
+  description: string,
+  date: string
+) => {
+  try {
+    const { data, error } = await supabase.from('transactions').insert([
+      {
+        user_id: userId,
+        amount,
+        category_id: categoryId,
+        description,
+        date,
+      },
+    ]);
+
+    if (error) {
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.error('Error creating transaction:', error);
+    throw error;
+  }
+};

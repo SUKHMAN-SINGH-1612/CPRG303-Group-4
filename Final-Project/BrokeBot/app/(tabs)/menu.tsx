@@ -1,19 +1,56 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavBar from '../../components/BottomNavBar';
-
+import supabase from '../../lib/supabase'; // Ensure you have a Supabase client setup
 
 export default function Menu() {
   const router = useRouter();
+  const [user, setUser] = useState({ name: '', uuid: '' });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const { data: session, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Error fetching session:', sessionError);
+          return;
+        }
+
+        if (session?.session?.user) {
+          console.log('Session user ID:', session.session.user.id); // Debugging log
+          const { data, error } = await supabase
+            .from('users')
+            .select('name, id')
+            .eq('id', session.session.user.id)
+            .single();
+
+          if (error) {
+            console.error('Error fetching user data:', error);
+          } else if (data) {
+            console.log('Fetched user data:', data); // Debugging log
+            setUser({ name: data.name || 'Unknown', uuid: data.id });
+          } else {
+            console.warn('No user data found for the given ID.');
+          }
+        } else {
+          console.warn('No user session found.');
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.headerCard}>
         <Ionicons name="person-circle-outline" size={60} color="black" />
-        <Text style={styles.username}>Username</Text>
-        <Text style={styles.userId}>id: 76865</Text>
+        <Text style={styles.username}>{user.name || 'Username'}</Text>
+        <Text style={styles.userId}>id: {user.uuid || '76865'}</Text>
       </View>
       
       <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/add-transaction')}>

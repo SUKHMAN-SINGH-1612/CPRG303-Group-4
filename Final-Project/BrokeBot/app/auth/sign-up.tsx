@@ -10,6 +10,7 @@ export default function SignUp() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState(''); // Add state for name
   
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
@@ -36,7 +37,7 @@ export default function SignUp() {
           {
             id: data.user.id,
             email: email,
-            name: data.user.email,
+            name: name, // Save the user's name
           },
         ]);
   
@@ -70,6 +71,16 @@ export default function SignUp() {
           onChangeText={setEmail}
           style={styles.input}
           keyboardType="email-address"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="person-outline" size={20} style={styles.icon} />
+        <TextInput
+          placeholder="Name"
+          value={name}
+          onChangeText={setName}
+          style={styles.input}
         />
       </View>
 
