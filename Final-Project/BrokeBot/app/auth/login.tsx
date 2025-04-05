@@ -1,27 +1,44 @@
-
-
-
-
-// Final Project/brokebot/app/auth/login.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import BottomNavBar from '../../components/BottomNavBar'; // Adjusted path
+import supabase from '../../lib/supabase'; // import your supabase client
+import BottomNavBar from '../../components/BottomNavBar';
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
+
+  const handleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+  
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  
+    console.log("Logged in user:", data.user); // Check user state
+    
+    // If login is successful, set the login state to true and redirect
+    if (data?.user) {
+      setIsLoggedIn(true); // Update login state to true
+      router.push('/(tabs)/menu'); // Redirect to menu or another screen
+    } else {
+      alert('Login failed');
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Logo */}
       <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
       <Text style={styles.title}>LOGIN</Text>
 
-      {/* Email Input */}
       <View style={styles.inputContainer}>
         <Ionicons name="mail-outline" size={20} style={styles.icon} />
         <TextInput
@@ -33,7 +50,6 @@ export default function Login() {
         />
       </View>
 
-      {/* Password Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Password"
@@ -50,23 +66,18 @@ export default function Login() {
         />
       </View>
 
-      {/* Login Button */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push('/(tabs)/menu')}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>LOGIN</Text>
       </TouchableOpacity>
 
-      {/* Footer Link */}
       <TouchableOpacity onPress={() => router.push('/auth/sign-up')}>
         <Text style={styles.footerText}>
           DON'T HAVE AN ACCOUNT? <Text style={styles.link}>SIGN UP</Text>
         </Text>
       </TouchableOpacity>
 
-      {/* Bottom Navigation Bar */}
-      <BottomNavBar />
+      {/* Conditionally render the BottomNavBar based on isLoggedIn */}
+      {isLoggedIn && <BottomNavBar />}
     </View>
   );
 }

@@ -1,120 +1,67 @@
-// // Final Project/brokebot/app/auth/sign-up.tsx
-// import React from 'react';
-// import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
-// import { useRouter } from 'expo-router';
-
-// export default function SignUp() {
-//   const router = useRouter();
-
-//   return (
-//     <View style={styles.container}>
-//       <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
-//       <Text style={styles.title}>SIGN UP</Text>
-//       <Text style={styles.subtitle}>CREATE YOUR ACCOUNT</Text>
-//       <TextInput style={styles.input} placeholder="Username" />
-//       <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
-//       <TextInput style={styles.input} placeholder="Password" secureTextEntry />
-//       <TextInput style={styles.input} placeholder="Confirm Password" secureTextEntry />
-//       <TouchableOpacity style={styles.button} onPress={() => router.push('/(tabs)/menu')}>
-//         <Text style={styles.buttonText}>SIGN UP</Text>
-//       </TouchableOpacity>
-//       <TouchableOpacity onPress={() => router.push('/auth/login')}>
-//         <Text style={styles.link}>ALREADY HAVE AN ACCOUNT? LOGIN</Text>
-//       </TouchableOpacity>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     alignItems: 'center',
-//     padding: 20,
-//     backgroundColor: '#FFFFFF',
-//   },
-//   logo: {
-//     width: 60,
-//     height: 60,
-//     marginTop: 50,
-//   },
-//   title: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     color: '#000000',
-//     marginTop: 20,
-//   },
-//   subtitle: {
-//     fontSize: 18,
-//     color: '#000000',
-//     marginBottom: 30,
-//   },
-//   input: {
-//     width: '100%',
-//     padding: 15,
-//     borderWidth: 1,
-//     borderColor: '#D3D3D3',
-//     borderRadius: 8,
-//     marginVertical: 10,
-//     fontSize: 16,
-//   },
-//   button: {
-//     backgroundColor: '#6B48FF',
-//     padding: 15,
-//     borderRadius: 8,
-//     width: '100%',
-//     alignItems: 'center',
-//     marginVertical: 20,
-//   },
-//   buttonText: {
-//     color: '#FFFFFF',
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-//   link: {
-//     color: '#6B48FF',
-//     fontSize: 14,
-//   },
-// });
-
-
-
-
-
-// Final Project/brokebot/app/auth/sign-up.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import BottomNavBar from '../../components/BottomNavBar'; // Adjusted path
+import supabase from '../../lib/supabase'; // import your supabase client
 
 export default function SignUp() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const handleSignUp = async () => {
+    if (password !== confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+  
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+  
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  
+    console.log("Signed up user:", data.user);
+  
+    if (data.user) {
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: data.user.id,
+            email: email,
+            name: data.user.email,
+          },
+        ]);
+  
+      if (insertError) {
+        alert('Error inserting user into the database: ' + insertError.message);
+        return;
+      }
+  
+      console.log('User inserted into users table');
+  
+      // ✅ Redirect to login page instead of auto-login
+      alert('Sign up successful! Please log in.');
+      router.push('/auth/login');
+    } else {
+      alert('Error: User data is null');
+    }
+  };
+  
+  
 
   return (
     <View style={styles.container}>
-      {/* Logo */}
       <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
       <Text style={styles.title}>SIGN UP</Text>
-      <Text style={styles.subtitle}>CREATE YOUR ACCOUNT</Text>
 
-      {/* Username Input */}
-      <View style={styles.inputContainer}>
-        <Ionicons name="person-outline" size={20} style={styles.icon} />
-        <TextInput
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          style={styles.input}
-        />
-      </View>
-
-      {/* Email Input */}
       <View style={styles.inputContainer}>
         <Ionicons name="mail-outline" size={20} style={styles.icon} />
         <TextInput
@@ -126,7 +73,6 @@ export default function SignUp() {
         />
       </View>
 
-      {/* Password Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Password"
@@ -143,44 +89,25 @@ export default function SignUp() {
         />
       </View>
 
-      {/* Confirm Password Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Confirm Password"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          secureTextEntry={!showConfirmPassword}
+          secureTextEntry={!showPassword}
           style={styles.input}
-        />
-        <Ionicons
-          name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-          size={20}
-          style={styles.icon}
-          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
         />
       </View>
 
-      {/* Sign Up Button */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push('/(tabs)/menu')}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
         <Text style={styles.buttonText}>SIGN UP</Text>
       </TouchableOpacity>
 
-      {/* Footer Link */}
       <TouchableOpacity onPress={() => router.push('/auth/login')}>
         <Text style={styles.footerText}>
           ALREADY HAVE AN ACCOUNT? <Text style={styles.link}>LOGIN</Text>
         </Text>
       </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push('/auth/login')}>
-        <Text style={styles.link}>ALREADY HAVE AN ACCOUNT? LOGIN</Text>
-      </TouchableOpacity>
-
-      {/* Bottom Navigation Bar */}
-      <BottomNavBar />
     </View>
   );
 }
@@ -203,11 +130,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
     marginTop: 20,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#000000',
-    marginBottom: 30,
+    marginBottom: 50,
   },
   inputContainer: {
     flexDirection: 'row',
