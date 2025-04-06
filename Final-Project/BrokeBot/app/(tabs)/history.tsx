@@ -1,28 +1,72 @@
 // Final Project/brokebot/app/(tabs)/history.tsx
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import BottomNavBar from '../../components/BottomNavBar';
-
-
-const transactions = [
-  { id: '1', category: 'Housing', amount: 1500, date: 'March 2025' },
-  { id: '2', category: 'Food', amount: 500, date: 'March 2025' },
-  { id: '3', category: 'Lifestyle', amount: 400, date: 'March 2025' },
-  { id: '4', category: 'Savings', amount: 500, date: 'March 2025' },
-];
+import supabase from '../../lib/supabase';
 
 export default function History() {
+  const [transactions, setTransactions] = useState([]);
+  const [totalSpend, setTotalSpend] = useState(0);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          throw userError;
+        }
+
+        const userId = user?.id;
+        if (!userId) {
+          Alert.alert('Error', 'User not authenticated.');
+          return;
+        }
+
+        const currentDate = new Date();
+        const currentMonth = currentDate.toISOString().slice(0, 7); // Format: YYYY-MM
+        const firstDayOfMonth = `${currentMonth}-01`;
+        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().slice(0, 10); // Last day of the month
+
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', userId)
+          .gte('date', firstDayOfMonth)
+          .lte('date', lastDayOfMonth);
+
+        if (error) {
+          throw error;
+        }
+
+        const filteredTransactions = data.map((transaction) => ({
+          ...transaction,
+          amount: transaction.category === 'Income' ? transaction.amount : -transaction.amount,
+        }));
+
+        const total = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+        setTransactions(filteredTransactions);
+        setTotalSpend(total);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+        Alert.alert('Error', 'Failed to fetch transactions.');
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>History</Text>
       </View>
       <View style={styles.dateContainer}>
-        <Text style={styles.date}>March 2025</Text>
+        <Text style={styles.date}>{new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</Text>
       </View>
       <View style={styles.chart}>
         <View style={styles.chartInner} />
-        <Text style={styles.chartText}>$2400</Text>
+        <Text style={styles.chartText}>${totalSpend.toFixed(2)}</Text>
         <Text style={styles.chartSubText}>total spend</Text>
       </View>
       <ScrollView>
@@ -33,12 +77,13 @@ export default function History() {
               <Text style={styles.category}>{transaction.category}</Text>
               <Text style={styles.date}>{transaction.date}</Text>
             </View>
-            <Text style={styles.amount}>-${transaction.amount.toFixed(2)}</Text>
+            <Text style={styles.amount}>
+              {transaction.amount < 0 ? '-' : ''}${Math.abs(transaction.amount).toFixed(2)}
+            </Text>
           </View>
         ))}
       </ScrollView>
-            <BottomNavBar />
-      
+      <BottomNavBar />
     </View>
   );
 }
