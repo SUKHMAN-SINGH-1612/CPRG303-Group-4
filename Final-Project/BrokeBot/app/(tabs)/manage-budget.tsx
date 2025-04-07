@@ -23,7 +23,7 @@ export default function ManageBudget() {
         setCategories(data || []);
       }
     };
-
+  
     const fetchUser = async () => {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error || !user) {
@@ -33,7 +33,7 @@ export default function ManageBudget() {
       setUserId(user.id);
       await fetchTotalIncome(user.id);
     };
-
+  
     const fetchTotalIncome = async (userId: string) => {
       const { data, error } = await supabase
         .from('budgets')
@@ -41,49 +41,55 @@ export default function ManageBudget() {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1);
-
+  
       if (error || !data || data.length === 0) {
         Alert.alert('Error', 'Failed to fetch income or budget.');
         return;
       }
-
+  
       setTotalIncome(data[0].total_funds);
     };
-
+  
     fetchCategories();
     fetchUser();
-    fetchSavedBudgetCategories(); // Ensure saved categories and amounts are fetched
   }, []);
+  
+  useEffect(() => {
+    const fetchSavedBudgetCategories = async () => {
+      if (!userId) return;
+  
+      const { data: budget } = await supabase
+        .from('budgets')
+        .select('id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+  
+      if (!budget) return;
+  
+      const { data, error } = await supabase
+        .from('budget_categories')
+        .select('category_id, amount_allocated, created_at')
+        .eq('budget_id', budget.id);
+  
+      if (!error && data) {
+        setSavedBudgetCategories(data || []);
+        setSelectedCategories(data.map((item) => item.category_id.toString()));
+        setAllocatedAmounts(
+          data.reduce((acc: { [key: string]: number }, item) => {
+            acc[item.category_id] = item.amount_allocated;
+            return acc;
+          }, {})
+        );
+      }
+    };
+  
+    fetchSavedBudgetCategories();
+  }, [userId]);
+  // Ensure saved categories and amounts are fetched
+  
 
-  const fetchSavedBudgetCategories = async () => {
-    if (!userId) return;
-
-    const { data: budget } = await supabase
-      .from('budgets')
-      .select('id')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (!budget) return;
-
-    const { data, error } = await supabase
-      .from('budget_categories')
-      .select('category_id, amount_allocated, created_at')
-      .eq('budget_id', budget.id);
-
-    if (!error && data) {
-      setSavedBudgetCategories(data || []);
-      setSelectedCategories(data.map((item) => item.category_id.toString())); // Populate selectedCategories
-      setAllocatedAmounts(
-        data.reduce((acc: { [key: string]: number }, item) => {
-          acc[item.category_id] = item.amount_allocated;
-          return acc;
-        }, {} as { [key: string]: number })
-      ); // Populate allocatedAmounts
-    }
-  };
 
   const handleCategorySelection = async (categoryId: string | number) => {
     if (selectedCategories.includes(categoryId.toString())) {
