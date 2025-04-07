@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import supabase from '../../lib/supabase';
@@ -284,11 +284,13 @@ export default function ManageBudget() {
   };
 
   return (
+    
     <ScrollView style={styles.container}>
+      <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
       <Text style={styles.title}>Manage Budget</Text>
-      <Text style={styles.totalIncome}>Total Income: ${totalIncome?.toFixed(2) || '0.00'}</Text>
+      <Text style={styles.totalIncome}> Income: ${totalIncome?.toFixed(2) || '0.00'}</Text>
 
-      <Text style={styles.sectionTitle}>Edit Total Income</Text>
+      <Text style={styles.sectionTitle}>Edit Income</Text>
       <View style={styles.incomeContainer}>
         <TextInput
           style={styles.input}
@@ -317,7 +319,7 @@ export default function ManageBudget() {
         </>
       )}
 
-      <Text style={styles.sectionTitle}>Select a Category</Text>
+      <Text style={styles.sectionTitle}>Add New Category</Text>
       <Picker
         selectedValue={selectedCategoryId}
         onValueChange={(itemValue) => {
@@ -358,6 +360,12 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     backgroundColor: '#fff',
+  },
+
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
   },
   title: {
     fontSize: 24,
@@ -427,4 +435,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  
+
 });
