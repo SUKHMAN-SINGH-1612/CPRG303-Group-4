@@ -112,6 +112,56 @@ export default function ManageBudget() {
   // Ensure saved categories and amounts are fetched
   
 
+  const handleIncomeUpdate = async () => {
+    if (!incomeInput || !userId) {
+      Alert.alert('Error', 'Please enter a valid income.');
+      return;
+    }
+  
+    const updatedIncome = parseFloat(incomeInput);
+    if (isNaN(updatedIncome) || updatedIncome <= 0) {
+      Alert.alert('Error', 'Income must be a positive number.');
+      return;
+    }
+  
+    const { data: budget, error: budgetError } = await supabase
+      .from('budgets')
+      .select('id')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+  
+    if (budgetError || !budget) {
+      // If no budget exists, create a new one
+      const { error: insertError } = await supabase
+        .from('budgets')
+        .insert([{ user_id: userId, total_funds: updatedIncome }]);
+  
+      if (insertError) {
+        Alert.alert('Error', 'Failed to create new budget: ' + insertError.message);
+      } else {
+        setTotalIncome(updatedIncome);
+        setIncomeInput('');
+        Alert.alert('Success', 'New budget created successfully!');
+      }
+      return;
+    }
+  
+    // Update the existing budget
+    const { error } = await supabase
+      .from('budgets')
+      .update({ total_funds: updatedIncome })
+      .eq('id', budget.id);
+  
+    if (error) {
+      Alert.alert('Error', 'Failed to update income: ' + error.message);
+    } else {
+      setTotalIncome(updatedIncome);
+      setIncomeInput('');
+      Alert.alert('Success', 'Income updated successfully!');
+    }
+  };
 
   const handleCategorySelection = async (categoryId: string | number) => {
     if (selectedCategories.includes(categoryId.toString())) {
@@ -143,6 +193,7 @@ export default function ManageBudget() {
     }
 
     setSelectedCategories((prev) => [...prev, categoryId.toString()]);
+    // Do not reset dropdown or allocated amounts here
   };
 
   const handleAmountAllocation = (categoryId: string, amount: number) => {
@@ -224,7 +275,11 @@ export default function ManageBudget() {
           created_at: new Date().toISOString(),
         })),
       ]);
-        // Refresh saved categories with new ones;  // Refresh saved categories
+
+      // Reset dropdown and allocated amounts only after saving
+      setSelectedCategoryId('');
+      setAllocatedAmounts({});
+      setSelectedCategories([]);
     }
   };
 
@@ -232,6 +287,20 @@ export default function ManageBudget() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Manage Budget</Text>
       <Text style={styles.totalIncome}>Total Income: ${totalIncome?.toFixed(2) || '0.00'}</Text>
+
+      <Text style={styles.sectionTitle}>Edit Total Income</Text>
+      <View style={styles.incomeContainer}>
+        <TextInput
+          style={styles.input}
+          keyboardType="numeric"
+          placeholder="Enter new income"
+          value={incomeInput}
+          onChangeText={setIncomeInput}
+        />
+        <TouchableOpacity style={styles.updateButton} onPress={handleIncomeUpdate}>
+          <Text style={styles.updateButtonText}>Update Income</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Display saved budget categories immediately after data is fetched */}
       {savedBudgetCategories.length > 0 && (
@@ -341,6 +410,21 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   categoryName: {
+    fontSize: 16,
+  },
+  incomeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  updateButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  updateButtonText: {
+    color: '#fff',
     fontSize: 16,
   },
 });
