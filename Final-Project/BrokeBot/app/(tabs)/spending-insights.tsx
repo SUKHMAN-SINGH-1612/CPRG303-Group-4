@@ -1,28 +1,123 @@
-// Final Project/brokebot/app/(tabs)/spending-insights.tsx
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import BottomNavBar from '../../components/BottomNavBar';
+import supabase from '../../lib/supabase';
 
-const transactions = [
-  { id: '1', category: 'Food', amount: 45.00, date: 'Today' },
-  { id: '2', category: 'Shopping', amount: 280.00, date: 'Today' },
-  { id: '3', category: 'Entertainment', amount: 57.00, date: 'Yesterday' },
-  { id: '4', category: 'Travel', amount: 230.00, date: 'Yesterday' },
-];
+// Define the type for a transaction
+interface Transaction {
+  id: string;
+  category: string | null;
+  amount: number;
+  date: string | null;
+}
 
-export default function SpendingInsights() {
+const SpendingInsights = () => {
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [income, setIncome] = useState(0);
+  const [expenses, setExpenses] = useState(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState('John Wilson'); // Default username
+  const [loading, setLoading] = useState(true); // Add loading state
+
+  useEffect(() => {
+    // Fetch the authenticated user
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id); // user.id is the UUID from the users table
+      } else {
+        console.error('No authenticated user found');
+      }
+      setLoading(false); // Stop loading once user is fetched
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    // Only fetch data if userId is available
+    if (!userId || loading) return;
+
+    // Fetch user name
+    const fetchUserName = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching username:', error);
+      } else {
+        setUsername(data?.name || 'John Wilson'); // Use fetched name or fallback
+      }
+    };
+
+    // Fetch budget data
+    const fetchBudget = async () => {
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('total_funds')
+        .eq('user_id', userId)
+        .single(); // Assuming one budget per user
+
+      if (error) {
+        console.error('Error fetching budget:', error);
+      } else {
+        setIncome(data?.total_funds || 0);
+      }
+    };
+
+    // Fetch transaction data
+    const fetchTransactions = async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id, category, amount, date')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error fetching transactions:', error);
+      } else {
+        const totalExpenses = data.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+        setExpenses(totalExpenses);
+        setTransactions(data as Transaction[]);
+      }
+    };
+
+    // Calculate total balance
+    const calculateBalance = () => {
+      const balance = income - expenses;
+      setTotalBalance(balance);
+    };
+
+    fetchUserName();
+    fetchBudget();
+    fetchTransactions();
+    calculateBalance();
+  }, [userId, loading, income, expenses]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#6B48FF" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    ); // Improved loading state with ActivityIndicator
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcome}>Welcome!</Text>
-        <Text style={styles.username}>John Wilson</Text>
+        <Text style={styles.username}>{username}</Text> {/* Dynamic username from users table */}
       </View>
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Total Balance</Text>
-        <Text style={styles.balanceAmount}>$480.00</Text>
+        <Text style={styles.balanceAmount}>${totalBalance.toFixed(2)}</Text>
         <View style={styles.balanceDetails}>
-          <Text style={styles.income}>Income: 2800.00</Text>
-          <Text style={styles.expenses}>Expenses: 700.00</Text>
+          <Text style={styles.income}>Income: ${income.toFixed(2)}</Text>
+          <Text style={styles.expenses}>Expenses: ${expenses.toFixed(2)}</Text>
         </View>
       </View>
       <Text style={styles.sectionTitle}>Transactions</Text>
@@ -34,25 +129,23 @@ export default function SpendingInsights() {
           <View key={transaction.id} style={styles.transactionContainer}>
             <View style={styles.icon} />
             <View style={styles.details}>
-              <Text style={styles.category}>{transaction.category}</Text>
-              <Text style={styles.date}>{transaction.date}</Text>
+              <Text style={styles.category}>{transaction.category || 'Uncategorized'}</Text>
+              <Text style={styles.date}>{transaction.date || 'N/A'}</Text>
             </View>
-            <Text style={styles.amount}>-${transaction.amount.toFixed(2)}</Text>
+            <Text style={styles.amount}>-${(transaction.amount || 0).toFixed(2)}</Text>
           </View>
         ))}
       </ScrollView>
-            <BottomNavBar />
-      
+      <BottomNavBar />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
     backgroundColor: '#FFFFFF',
-
   },
   header: {
     flexDirection: 'row',
@@ -142,4 +235,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
+  loadingText: {
+    fontSize: 16,
+    color: '#000000',
+    marginTop: 10,
+  },
 });
+
+export default SpendingInsights;
