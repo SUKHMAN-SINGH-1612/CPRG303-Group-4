@@ -12,6 +12,7 @@ export default function ManageBudget() {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [savedBudgetCategories, setSavedBudgetCategories] = useState<any[]>([]);
+  const [incomeInput, setIncomeInput] = useState<string>(''); 
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -41,17 +42,38 @@ export default function ManageBudget() {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1);
-  
-      if (error || !data || data.length === 0) {
-        Alert.alert('Error', 'Failed to fetch income or budget.');
+
+      if (error) {
+        console.error('Error fetching income or budget:', error);
         return;
       }
+
+      if (!data || data.length === 0) {
+        setTotalIncome(null); // No income record found
+      } else {
+        setTotalIncome(data[0].total_funds); // Record found
+      }
+    };
+    fetchUser();
+    const handleIncomeSubmit = async () => {
+      if (!incomeInput) {
+        return; // Don't proceed if input is empty
+      }
   
-      setTotalIncome(data[0].total_funds);
+      const { error } = await supabase
+        .from('budgets')
+        .insert([{ user_id: userId, total_funds: parseFloat(incomeInput) }]);
+  
+      if (error) {
+        console.error('Error saving income:', error);
+      } else {
+        setTotalIncome(parseFloat(incomeInput)); // Update the state with the new income
+        setIncomeInput(''); // Clear input field
+      }
     };
   
     fetchCategories();
-    fetchUser();
+   
   }, []);
   
   useEffect(() => {
@@ -194,11 +216,15 @@ export default function ManageBudget() {
       Alert.alert('Error', 'Failed to save: ' + error.message);
     } else {
       Alert.alert('Success', 'Saved successfully!');
-      setSavedBudgetCategories(newCategories.map((categoryId) => ({
-        category_id: categoryId,
-        amount_allocated: allocatedAmounts[categoryId],
-        created_at: new Date().toISOString(),
-      })));  // Refresh saved categories with new ones;  // Refresh saved categories
+      setSavedBudgetCategories((prev) => [
+        ...prev,
+        ...newCategories.map((categoryId) => ({
+          category_id: categoryId,
+          amount_allocated: allocatedAmounts[categoryId],
+          created_at: new Date().toISOString(),
+        })),
+      ]);
+        // Refresh saved categories with new ones;  // Refresh saved categories
     }
   };
 
@@ -238,21 +264,19 @@ export default function ManageBudget() {
       </Picker>
 
       <Text style={styles.sectionTitle}>Allocate Amount</Text>
-      {selectedCategories.map((categoryId) => {
-        const category = categories.find((c) => c.id === categoryId);
-        return (
-          <View key={categoryId} style={styles.allocationContainer}>
-           
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              placeholder="Amount"
-              value={allocatedAmounts[categoryId]?.toString() || ''}
-              onChangeText={(text) => handleAmountAllocation(categoryId, parseFloat(text))}
-            />
-          </View>
-        );
-      })}
+      {selectedCategoryId && (
+        <View style={styles.allocationContainer}>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            placeholder="Amount"
+            value={allocatedAmounts[selectedCategoryId]?.toString() || ''}
+            onChangeText={(text) => handleAmountAllocation(selectedCategoryId, parseFloat(text))}
+          />
+        </View>
+)}
+
+   
 
       <TouchableOpacity style={styles.saveButton} onPress={handleSaveBudgetCategories}>
         <Text style={styles.saveButtonText}>Save Budget Categories</Text>
