@@ -121,3 +121,45 @@ export const createTransaction = async (
     throw error;
   }
 };
+
+// READ: Get user preferences
+export const getUserPreferences = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle(); // Use maybeSingle to handle no rows gracefully
+
+    if (error) throw error;
+    if (!data) {
+      console.warn('No preferences found for user:', userId);
+      return null; // Return null if no preferences exist
+    }
+    return data;
+  } catch (error) {
+    console.error('Error fetching user preferences:', error);
+    throw error;
+  }
+};
+
+// UPDATE: Update user preferences
+export const updateUserPreferences = async (
+  userId: string | null,
+  preferences: { currency: string; theme: string; notification_enabled: boolean }
+) => {
+  try {
+    if (!userId) {
+      throw new Error('User ID is required to update preferences.');
+    }
+
+    const { error } = await supabase
+      .from('user_preferences')
+      .upsert({ user_id: userId, ...preferences }, { onConflict: 'user_id' });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating user preferences:', error);
+    throw error;
+  }
+};
