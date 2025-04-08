@@ -19,11 +19,13 @@ export default function Menu() {
         }
 
         if (session?.session?.user) {
-          console.log('Session user ID:', session.session.user.id); // Debugging log
+          const userId = session.session.user.id; // Fetch user_id from session
+          console.log('Session user ID:', userId); // Debugging log
+
           const { data, error } = await supabase
             .from('users')
             .select('name, id')
-            .eq('id', session.session.user.id)
+            .eq('id', userId)
             .single();
 
           if (error) {
@@ -85,15 +87,15 @@ export default function Menu() {
         </View>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.menuItem}>
+      <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/PreferencesPage')}>
         <Ionicons name="settings-outline" size={20} color="black" style={styles.icon} />
         <View>
           <Text style={styles.menuText}>App Preferences</Text>
-          <Text style={styles.menuSubText}>Add a credit or debit transaction</Text>
+          <Text style={styles.menuSubText}>Manage your app preferences</Text>
         </View>
       </TouchableOpacity>
-            <BottomNavBar />
-      
+
+      <BottomNavBar />
     </View>
   );
 }
