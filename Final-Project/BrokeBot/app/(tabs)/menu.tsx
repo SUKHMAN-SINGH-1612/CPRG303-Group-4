@@ -87,7 +87,7 @@ export default function Menu() {
         </View>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/PreferencesPage')}>
+      <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/preferencesPage')}>
         <Ionicons name="settings-outline" size={20} color="black" style={styles.icon} />
         <View>
           <Text style={styles.menuText}>App Preferences</Text>
