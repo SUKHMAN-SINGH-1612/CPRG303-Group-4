@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import BottomNavBar from '../../components/BottomNavBar';
 import { Picker } from '@react-native-picker/picker'; // Updated import
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'; // Added DateTimePicker import
 import supabase from '../../lib/supabase';
 
 export default function AddTransaction() {
@@ -10,7 +11,8 @@ export default function AddTransaction() {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(new Date()); // Initialize with current date object
+  const [showDatePicker, setShowDatePicker] = useState(false); // State for date picker visibility
   const [userId, setUserId] = useState<string | null>(null);
 
   // Static list of predefined categories
@@ -43,8 +45,24 @@ export default function AddTransaction() {
     fetchUserId();
   }, []);
 
+  // Format date to YYYY-MM-DD string
+  const formatDate = (rawDate: Date): string => {
+    let d = new Date(rawDate);
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    let year = d.getFullYear();
+
+    if (month.length < 2)
+      month = '0' + month;
+    if (day.length < 2)
+      day = '0' + day;
+
+    return [year, month, day].join('-');
+  };
+
   const handleSave = async () => {
-    if (!amount || !category || !date) {
+    const formattedDate = formatDate(date); // Format date before saving
+    if (!amount || !category || !formattedDate) { // Use formattedDate for validation
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
@@ -61,7 +79,7 @@ export default function AddTransaction() {
           amount: parseFloat(amount),
           category, // Save category as text
           description,
-          date,
+          date: formattedDate, // Save formatted date string
         },
       ]);
 
@@ -106,13 +124,25 @@ export default function AddTransaction() {
         value={description}
         onChangeText={setDescription}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Date (YYYY-MM-DD)"
-        placeholderTextColor="#555"
-        value={date}
-        onChangeText={setDate}
-      />
+
+      {/* Date Picker */}
+      <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
+         <Text style={styles.dateText}>{formatDate(date)}</Text>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+            const currentDate = selectedDate || date;
+            setShowDatePicker(Platform.OS === 'ios'); // Keep visible on iOS until done
+            setDate(currentDate);
+          }}
+        />
+      )}
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={() => router.back()}>
           <Text style={styles.buttonText}>Cancel</Text>
@@ -169,4 +199,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  // Added style for date text
+  dateText: {
+      fontSize: 16,
+      color: '#000', // Or your preferred color
+  }
 });
