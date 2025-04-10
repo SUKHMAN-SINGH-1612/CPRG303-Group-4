@@ -1,7 +1,6 @@
 // Final Project/brokebot/app/(tabs)/spending-insights.tsx
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import BottomNavBar from '../../components/BottomNavBar';
 
 const transactions = [
   { id: '1', category: 'Food', amount: 45.00, date: 'Today' },
@@ -41,8 +40,7 @@ export default function SpendingInsights() {
           </View>
         ))}
       </ScrollView>
-            <BottomNavBar />
-      
+      <Text style={styles.noDataText}>No spending data available.</Text>
     </View>
   );
 }
@@ -141,5 +139,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
+  },
+  noDataText: {
+    fontSize: 16,
+    color: '#000000',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

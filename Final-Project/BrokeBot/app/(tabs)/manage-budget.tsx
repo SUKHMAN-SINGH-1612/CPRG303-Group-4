@@ -1,7 +1,6 @@
 // Final Project/brokebot/app/(tabs)/manage-budget.tsx
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
-import BottomNavBar from '../../components/BottomNavBar';
 
 const budgets = [
   { category: 'Salary', amount: 5000 },
@@ -36,8 +35,6 @@ export default function ManageBudget() {
           </View>
         ))}
       </ScrollView>
-      <BottomNavBar />
-      
     </View>
   );
 }

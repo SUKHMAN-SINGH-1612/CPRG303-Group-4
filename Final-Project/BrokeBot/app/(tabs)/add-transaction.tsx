@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import BottomNavBar from '../../components/BottomNavBar';
-import { Picker } from '@react-native-picker/picker'; // Updated import
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'; // Added DateTimePicker import
+import { Picker } from '@react-native-picker/picker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import supabase from '../../lib/supabase';
+import { useTheme } from '../../context/ThemeContext';
+import { Colors } from '../../constants/Colors';
 
 export default function AddTransaction() {
   const router = useRouter();
+  const { theme } = useTheme(); // Use theme context
+  const colors = Colors[theme]; // Get colors for the current theme
+
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date()); // Initialize with current date object
-  const [showDatePicker, setShowDatePicker] = useState(false); // State for date picker visibility
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Static list of predefined categories
@@ -87,49 +91,165 @@ export default function AddTransaction() {
         Alert.alert('Error', 'Failed to save transaction: ' + error.message);
       } else {
         Alert.alert('Success', 'Transaction saved successfully.');
-        router.back();
+        // Reset fields before navigating
+        setAmount('');
+        setCategory(''); // Reset category picker
+        setDescription('');
+        setDate(new Date()); // Reset date to current date
+
+        // --- Debugging --- 
+        console.log('Save successful, attempting to navigate back. User ID:', userId);
+        // Try explicit navigation first
+        // router.back(); 
+        router.push('/(tabs)/menu'); // Explicitly go to menu page for testing
+        // --- End Debugging ---
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Unexpected error saving transaction:', err);
-      Alert.alert('Error', 'An unexpected error occurred while saving the transaction.');
+      Alert.alert('Error', 'An unexpected error occurred: ' + err.message);
     }
   };
 
+  // Define base styles (closer to original, removing specific theme colors)
+  const baseStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+    },
+    header: {
+      marginBottom: 30,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    input: { // Style for TextInput and Picker wrapper
+      width: '100%',
+      padding: 15,
+      borderWidth: 1,
+      borderRadius: 8,
+      marginVertical: 10,
+      fontSize: 16,
+    },
+     pickerStyle: { // Specific style for Picker component if needed (often limited)
+      // height: 50, // Example height
+      // width: '100%',
+    },
+    datePickerTrigger: { // Style for the date TouchableOpacity
+      width: '100%',
+      padding: 15,
+      borderWidth: 1,
+      borderRadius: 8,
+      marginVertical: 10,
+      justifyContent: 'center', // Center text vertically
+    },
+    dateText: {
+        fontSize: 16,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 20,
+    },
+    button: {
+      padding: 15,
+      borderRadius: 8,
+      width: '48%',
+      alignItems: 'center',
+    },
+    buttonText: {
+      color: '#FFFFFF', // Keep button text white for contrast
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  });
+
+  // Define theme-specific styles
+  const themedStyles = StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+    },
+    title: {
+      color: colors.text,
+    },
+    input: {
+      backgroundColor: theme === 'light' ? '#FFFFFF' : '#333333',
+      borderColor: theme === 'light' ? '#D3D3D3' : '#555555',
+      color: colors.text,
+    },
+    placeholderText: {
+      color: theme === 'light' ? '#555' : '#bbb',
+    },
+    picker: {
+        color: colors.text, // Text color inside picker
+    },
+    dateText: {
+        color: colors.text,
+    },
+    cancelButton: {
+      backgroundColor: theme === 'light' ? '#D3D3D3' : '#555555',
+    },
+    saveButton: {
+      backgroundColor: colors.tint, // Use theme tint color for save
+    },
+    // Style for DateTimePicker modal (might vary by platform)
+    dateTimePicker: {
+        // backgroundColor: colors.background, // Example
+    }
+  });
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Add Transaction</Text>
+    // Apply themed container style
+    <View style={[baseStyles.container, themedStyles.container]}>
+      <View style={baseStyles.header}>
+        {/* Apply themed title style */}
+        <Text style={[baseStyles.title, themedStyles.title]}>Add Transaction</Text>
       </View>
+
+      {/* Amount Input - Restore original structure, apply themed styles */}
       <TextInput
-        style={styles.input}
+        style={[baseStyles.input, themedStyles.input]}
         placeholder="Amount"
-        placeholderTextColor="#555"
+        placeholderTextColor={themedStyles.placeholderText.color}
         keyboardType="numeric"
         value={amount}
         onChangeText={setAmount}
       />
-      <Picker
-        selectedValue={category}
-        onValueChange={(itemValue) => setCategory(itemValue)}
-        style={styles.input}>
-        <Picker.Item label="Select Category" value="" />
-        {categories.map((cat) => (
-          <Picker.Item key={cat.id} label={cat.name} value={cat.name} />
-        ))}
-      </Picker>
+
+      {/* Category Picker - Restore original structure, apply themed styles */}
+      {/* Picker needs to be wrapped for consistent styling */}
+      <View style={[baseStyles.input, themedStyles.input, { padding: 0 }]}> {/* Apply input styles to wrapper, remove padding */}
+          <Picker
+            selectedValue={category}
+            onValueChange={(itemValue) => setCategory(itemValue)}
+            style={[baseStyles.pickerStyle, themedStyles.picker]} // Apply base and themed picker styles
+            dropdownIconColor={colors.text}
+          >
+            <Picker.Item label="Select Category" value="" color={themedStyles.placeholderText.color} />
+            {categories.map((cat) => (
+              <Picker.Item key={cat.id} label={cat.name} value={cat.name} color={colors.text}/>
+            ))}
+          </Picker>
+      </View>
+
+      {/* Description Input - Restore original structure, apply themed styles */}
       <TextInput
-        style={styles.input}
+        style={[baseStyles.input, themedStyles.input]}
         placeholder="Description"
-        placeholderTextColor="#555"
+        placeholderTextColor={themedStyles.placeholderText.color}
         value={description}
         onChangeText={setDescription}
       />
 
-      {/* Date Picker */}
-      <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-         <Text style={styles.dateText}>{formatDate(date)}</Text>
+      {/* Date Picker Trigger - Restore original structure, apply themed styles */}
+      <TouchableOpacity
+        onPress={() => setShowDatePicker(true)}
+        style={[baseStyles.datePickerTrigger, themedStyles.input]} // Use specific trigger style + themed input bg/border
+      >
+         <Text style={[baseStyles.dateText, themedStyles.dateText]}>{formatDate(date)}</Text>
       </TouchableOpacity>
 
+      {/* Date Time Picker Modal */}
       {showDatePicker && (
         <DateTimePicker
           value={date}
@@ -137,71 +257,25 @@ export default function AddTransaction() {
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
             const currentDate = selectedDate || date;
-            setShowDatePicker(Platform.OS === 'ios'); // Keep visible on iOS until done
+            setShowDatePicker(Platform.OS === 'ios');
             setDate(currentDate);
           }}
+          // Potentially apply theme styles here if supported
+          // style={themedStyles.dateTimePicker}
         />
       )}
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>Cancel</Text>
+      {/* Buttons - Restore original structure, apply themed styles */}
+      <View style={baseStyles.buttonContainer}>
+        <TouchableOpacity style={[baseStyles.button, themedStyles.cancelButton]} onPress={() => router.back()}>
+          <Text style={baseStyles.buttonText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={handleSave}>
-          <Text style={styles.buttonText}>Save</Text>
+        <TouchableOpacity style={[baseStyles.button, themedStyles.saveButton]} onPress={handleSave}>
+          <Text style={baseStyles.buttonText}>Save</Text>
         </TouchableOpacity>
       </View>
-      <BottomNavBar />
+
+      {/* BottomNavBar is removed, handled by Tabs layout */}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    marginBottom: 30,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  input: {
-    width: '100%',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
-    borderRadius: 8,
-    marginVertical: 10,
-    fontSize: 16,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  button: {
-    backgroundColor: '#D3D3D3',
-    padding: 15,
-    borderRadius: 8,
-    width: '48%',
-    alignItems: 'center',
-  },
-  saveButton: {
-    backgroundColor: '#6B48FF',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  // Added style for date text
-  dateText: {
-      fontSize: 16,
-      color: '#000', // Or your preferred color
-  }
-});

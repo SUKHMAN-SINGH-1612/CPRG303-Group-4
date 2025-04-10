@@ -83,7 +83,9 @@ export default function History() {
           </View>
         ))}
       </ScrollView>
-      <BottomNavBar />
+      {transactions.length === 0 && (
+        <Text style={styles.noDataText}>No transactions found.</Text>
+      )}
     </View>
   );
 }
@@ -158,5 +160,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
+  },
+  noDataText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

@@ -146,7 +146,7 @@ export const getUserPreferences = async (userId: string) => {
 // UPDATE: Update user preferences
 export const updateUserPreferences = async (
   userId: string | null,
-  preferences: { currency: string; theme: string; notification_enabled: boolean }
+  preferences: { currency?: string; theme?: string; notification_enabled?: boolean }
 ) => {
   try {
     if (!userId) {

@@ -1,25 +1,49 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { useRouter, Redirect } from 'expo-router';
+import supabase from '../lib/supabase';
 
 const Index = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (session && session.user) {
+    return <Redirect href="/(tabs)/menu" />;
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome to Brokebot!</Text>
       <TouchableOpacity style={styles.button} onPress={() => router.push('/auth/sign-up')}>
-        <Text style={styles.buttonText}>Proceed to Sign Up!</Text>
+        <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
-      {/* <TouchableOpacity style={styles.button} onPress={() => router.push('/auth/login')}>
-        <Text style={styles.buttonText}>Go to Lab 4</Text>
+      <TouchableOpacity style={[styles.button, styles.loginButton]} onPress={() => router.push('/auth/login')}>
+        <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/(tabs)/menu')}>
-        <Text style={styles.buttonText}>Go to Lab 5</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/(tabs)/history')}>
-        <Text style={styles.buttonText}>Go to Lab 6</Text>
-      </TouchableOpacity> */}
     </View>
   );
 };
@@ -49,6 +73,9 @@ const styles = StyleSheet.create({
     color: 'white', 
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loginButton: {
+    backgroundColor: '#5bc0de',
   },
 });
 
