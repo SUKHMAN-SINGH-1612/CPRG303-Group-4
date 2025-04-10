@@ -1,8 +1,9 @@
 // Final Project/brokebot/components/BottomNavBar.tsx
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Define the type for icon names
 type IconName =
@@ -24,6 +25,7 @@ interface Tab {
 }
 
 export default function BottomNavBar() {
+  const insets = useSafeAreaInsets(); // Get safe area insets
   const router = useRouter();
   const pathname = usePathname(); // Get the current route
 
@@ -47,7 +49,7 @@ export default function BottomNavBar() {
   };
 
   return (
-    <View style={styles.navBar}>
+    <View style={[styles.navBar, { paddingBottom: insets.bottom }]}>
       {tabs.map(tab => (
         <TouchableOpacity
           key={tab.name}
@@ -65,6 +67,8 @@ export default function BottomNavBar() {
   );
 }
 
+const { width } = Dimensions.get('window'); // Get screen width
+
 const styles = StyleSheet.create({
   navBar: {
     flexDirection: 'row',
@@ -72,12 +76,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#000',
     paddingVertical: 10,
-    width: '100%',
+    width: width, // Use screen width to ensure full coverage
     position: 'absolute',
     bottom: 0,
+    left: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#333',
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 10,
   },
 });

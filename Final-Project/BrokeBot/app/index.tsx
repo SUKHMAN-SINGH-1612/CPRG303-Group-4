@@ -11,6 +11,11 @@ const Index = () => {
       <TouchableOpacity style={styles.button} onPress={() => router.push('/auth/sign-up')}>
         <Text style={styles.buttonText}>Proceed to Sign Up!</Text>
       </TouchableOpacity>
+      <TouchableOpacity  style={styles.button} onPress={() => router.push('/auth/login')}>
+      <Text style={styles.buttonText}>
+               <Text>LOGIN</Text>
+              </Text>
+            </TouchableOpacity>
       {/* <TouchableOpacity style={styles.button} onPress={() => router.push('/auth/login')}>
         <Text style={styles.buttonText}>Go to Lab 4</Text>
       </TouchableOpacity>
