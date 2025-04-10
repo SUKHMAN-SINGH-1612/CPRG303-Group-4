@@ -1,5 +1,5 @@
 // Final Project/brokebot/app/(tabs)/spending-insights.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 // import BottomNavBar from '../../components/BottomNavBar'; // Remove: Handled by layout
 import supabase from '../../lib/supabase';
 
@@ -29,6 +30,7 @@ const SpendingInsights = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
+      setLoading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -37,85 +39,107 @@ const SpendingInsights = () => {
         setUserId(user.id);
       } else {
         console.error('No authenticated user found');
-        setLoading(false); // Stop loading if no user
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchUserData = async () => {
-      try {
-        // Ensure loading is true at the start of data fetching
-        setLoading(true); 
-
-        // Fetch user name
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('name')
-          .eq('id', userId)
-          .single();
-
-        if (userError && userError.code !== 'PGRST116') { // Ignore "No rows found" error
-          console.error('Error fetching username:', userError);
-        } else {
-          setUsername(userData?.name || 'User'); // Use default if name is null
-        }
-
-        // Fetch budget
-        const { data: budgetData, error: budgetError } = await supabase
-          .from('budgets')
-          .select('total_funds')
-          .eq('user_id', userId)
-          // Consider ordering if multiple budgets per user possible
-          // .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        const totalFunds = budgetData?.total_funds || 0;
-        if (budgetError && budgetError.code !== 'PGRST116') { // Ignore error if no rows found
-            console.error('Error fetching budget:', budgetError);
-        }
-        setIncome(totalFunds);
-
-        // Fetch transactions
-        const { data: transactionData, error: transactionError } = await supabase
-          .from('transactions')
-          .select('id, category, amount, date') // Ensure 'category' is selected if it exists in your table
-          .eq('user_id', userId);
-
-        if (transactionError) {
-          console.error('Error fetching transactions:', transactionError);
-          setTransactions([]); // Set to empty array on error
-          setExpenses(0);
-          setTotalBalance(totalFunds); // Balance is income if transactions fail to load
-        } else {
-          const validTransactions = transactionData || [];
-          const totalExpenses = validTransactions.reduce(
-            (sum, transaction) => sum + (transaction.amount || 0),
-            0
-          );
-          setTransactions(validTransactions as Transaction[]);
-          setExpenses(totalExpenses);
-          setTotalBalance(totalFunds - totalExpenses);
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        // Set sensible defaults on catch-all error
-        setIncome(0);
-        setExpenses(0);
-        setTotalBalance(0);
-        setTransactions([]);
-      } finally {
+        setUserId(null);
         setLoading(false);
       }
     };
 
-    fetchUserData();
-  }, [userId]);
+    fetchUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+       const currentUser = session?.user;
+       setUserId(currentUser?.id ?? null);
+       if (!currentUser) {
+          setLoading(false);
+       }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUserData = async () => {
+        if (!userId) {
+           setIncome(0);
+           setExpenses(0);
+           setTotalBalance(0);
+           setTransactions([]);
+           setUsername('User');
+           if (!userId) setLoading(false); 
+           return; 
+        }
+
+        setLoading(true);
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', userId)
+            .single();
+
+          if (userError && userError.code !== 'PGRST116') {
+            console.error('Error fetching username:', userError);
+          } else {
+            setUsername(userData?.name || 'User');
+          }
+
+          const { data: budgetData, error: budgetError } = await supabase
+            .from('budgets')
+            .select('total_funds')
+            .eq('user_id', userId)
+            .limit(1)
+            .single();
+
+          const totalFunds = budgetData?.total_funds || 0;
+          if (budgetError && budgetError.code !== 'PGRST116') {
+              console.error('Error fetching budget:', budgetError);
+          }
+          setIncome(totalFunds);
+
+          const { data: transactionData, error: transactionError } = await supabase
+            .from('transactions')
+            .select('id, category, amount, date')
+            .eq('user_id', userId)
+            .order('date', { ascending: false });
+
+          if (transactionError) {
+            console.error('Error fetching transactions:', transactionError);
+            setTransactions([]);
+            setExpenses(0);
+            setTotalBalance(totalFunds);
+          } else {
+            const validTransactions = transactionData || [];
+            const incomeTransactions = validTransactions.filter(t => t.category === 'Income');
+            const expenseTransactions = validTransactions.filter(t => t.category !== 'Income');
+            const totalExpenses = expenseTransactions.reduce(
+              (sum, transaction) => sum + (transaction.amount || 0),
+              0
+            );
+            setTransactions(validTransactions as Transaction[]);
+            setExpenses(totalExpenses);
+            setTotalBalance(totalFunds - totalExpenses);
+          }
+        } catch (err) {
+          console.error('Error fetching data:', err);
+          setIncome(0);
+          setExpenses(0);
+          setTotalBalance(0);
+          setTransactions([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchUserData();
+
+      return () => {
+      };
+    }, [userId])
+  );
 
   if (loading) {
     return (
@@ -142,7 +166,7 @@ const SpendingInsights = () => {
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Recent Transactions</Text> // Updated title
+      <Text style={styles.sectionTitle}>Recent Transactions</Text>
       {/* Consider linking this to the history page */}
       {/* <TouchableOpacity onPress={() => router.push('/(tabs)/history')}> 
          <Text style={styles.viewAll}>View All</Text>
@@ -150,7 +174,7 @@ const SpendingInsights = () => {
 
       <ScrollView>
         {transactions.length > 0 ? (
-            transactions.slice(0, 5).map((transaction) => ( // Show only recent (e.g., first 5)
+            transactions.slice(0, 5).map((transaction) => (
               <View key={transaction.id} style={styles.transactionContainer}>
                 <View style={styles.icon} />
                 <View style={styles.details}>
@@ -159,10 +183,15 @@ const SpendingInsights = () => {
                   </Text>
                   <Text style={styles.date}>{transaction.date || 'N/A'}</Text>
                 </View>
-                <Text style={styles.amount}>
-                  {/* Assuming amount is always expense for this view? Add logic if needed */}
-                  -${(transaction.amount || 0).toFixed(2)}
-                </Text>
+                {transaction.category === 'Income' ? (
+                  <Text style={[styles.amount, styles.incomeAmount]}>
+                    +${(transaction.amount || 0).toFixed(2)}
+                  </Text>
+                ) : (
+                  <Text style={[styles.amount, styles.expenseAmount]}>
+                    -${(transaction.amount || 0).toFixed(2)}
+                  </Text>
+                )}
               </View>
             ))
         ) : (
@@ -246,18 +275,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#E3F2FD', // Light blue background for transactions
+    backgroundColor: '#E3F2FD',
     marginVertical: 5,
     borderRadius: 8,
   },
   icon: {
     width: 30,
     height: 30,
-    // Consider using an actual icon based on category later
-    backgroundColor: '#64B5F6', // Example color
+    backgroundColor: '#64B5F6',
     borderRadius: 15,
     marginRight: 10,
-    // Add basic icon styling or image source if needed
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -276,7 +303,12 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#D32F2F', // Red color for expenses
+  },
+  expenseAmount: {
+    color: '#D32F2F',
+  },
+  incomeAmount: {
+    color: '#388E3C',
   },
   loadingText: {
     fontSize: 16,
