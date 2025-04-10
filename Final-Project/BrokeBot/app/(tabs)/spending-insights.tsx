@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import BottomNavBar from '../../components/BottomNavBar';
+// Final Project/brokebot/app/(tabs)/spending-insights.tsx
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { useFocusEffect } from 'expo-router';
+// import BottomNavBar from '../../components/BottomNavBar'; // Remove: Handled by layout
 import supabase from '../../lib/supabase';
 
-// Define the type for a transaction
 interface Transaction {
   id: string;
   category: string | null;
@@ -17,101 +25,138 @@ const SpendingInsights = () => {
   const [expenses, setExpenses] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-  const [username, setUsername] = useState('John Wilson'); // Default username
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [username, setUsername] = useState('User'); // Default username
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch the authenticated user
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      setLoading(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (user) {
-        setUserId(user.id); // user.id is the UUID from the users table
+        setUserId(user.id);
       } else {
         console.error('No authenticated user found');
+        setUserId(null);
+        setLoading(false);
       }
-      setLoading(false); // Stop loading once user is fetched
     };
 
     fetchUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+       const currentUser = session?.user;
+       setUserId(currentUser?.id ?? null);
+       if (!currentUser) {
+          setLoading(false);
+       }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+
   }, []);
 
-  useEffect(() => {
-    // Only fetch data if userId is available
-    if (!userId || loading) return;
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUserData = async () => {
+        if (!userId) {
+           setIncome(0);
+           setExpenses(0);
+           setTotalBalance(0);
+           setTransactions([]);
+           setUsername('User');
+           if (!userId) setLoading(false); 
+           return; 
+        }
 
-    // Fetch user name
-    const fetchUserName = async () => {
-      const { data, error } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single();
+        setLoading(true);
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', userId)
+            .single();
 
-      if (error) {
-        console.error('Error fetching username:', error);
-      } else {
-        setUsername(data?.name || 'John Wilson'); // Use fetched name or fallback
-      }
-    };
+          if (userError && userError.code !== 'PGRST116') {
+            console.error('Error fetching username:', userError);
+          } else {
+            setUsername(userData?.name || 'User');
+          }
 
-    // Fetch budget data
-    const fetchBudget = async () => {
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('total_funds')
-        .eq('user_id', userId)
-        .single(); // Assuming one budget per user
+          const { data: budgetData, error: budgetError } = await supabase
+            .from('budgets')
+            .select('total_funds')
+            .eq('user_id', userId)
+            .limit(1)
+            .single();
 
-      if (error) {
-        console.error('Error fetching budget:', error);
-      } else {
-        setIncome(data?.total_funds || 0);
-      }
-    };
+          const totalFunds = budgetData?.total_funds || 0;
+          if (budgetError && budgetError.code !== 'PGRST116') {
+              console.error('Error fetching budget:', budgetError);
+          }
+          setIncome(totalFunds);
 
-    // Fetch transaction data
-    const fetchTransactions = async () => {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('id, category, amount, date')
-        .eq('user_id', userId);
+          const { data: transactionData, error: transactionError } = await supabase
+            .from('transactions')
+            .select('id, category, amount, date')
+            .eq('user_id', userId)
+            .order('date', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching transactions:', error);
-      } else {
-        const totalExpenses = data.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
-        setExpenses(totalExpenses);
-        setTransactions(data as Transaction[]);
-      }
-    };
+          if (transactionError) {
+            console.error('Error fetching transactions:', transactionError);
+            setTransactions([]);
+            setExpenses(0);
+            setTotalBalance(totalFunds);
+          } else {
+            const validTransactions = transactionData || [];
+            const incomeTransactions = validTransactions.filter(t => t.category === 'Income');
+            const expenseTransactions = validTransactions.filter(t => t.category !== 'Income');
+            const totalExpenses = expenseTransactions.reduce(
+              (sum, transaction) => sum + (transaction.amount || 0),
+              0
+            );
+            setTransactions(validTransactions as Transaction[]);
+            setExpenses(totalExpenses);
+            setTotalBalance(totalFunds - totalExpenses);
+          }
+        } catch (err) {
+          console.error('Error fetching data:', err);
+          setIncome(0);
+          setExpenses(0);
+          setTotalBalance(0);
+          setTransactions([]);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    // Calculate total balance
-    const calculateBalance = () => {
-      const balance = income - expenses;
-      setTotalBalance(balance);
-    };
+      fetchUserData();
 
-    fetchUserName();
-    fetchBudget();
-    fetchTransactions();
-    calculateBalance();
-  }, [userId, loading, income, expenses]);
+      return () => {
+      };
+    }, [userId])
+  );
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, styles.loadingContainer]}> 
         <ActivityIndicator size="large" color="#6B48FF" />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
-    ); // Improved loading state with ActivityIndicator
+    );
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcome}>Welcome!</Text>
-        <Text style={styles.username}>{username}</Text> {/* Dynamic username from users table */}
+        <Text style={styles.username}>John Wilson</Text>
       </View>
+
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Total Balance</Text>
         <Text style={styles.balanceAmount}>${totalBalance.toFixed(2)}</Text>
@@ -120,23 +165,27 @@ const SpendingInsights = () => {
           <Text style={styles.expenses}>Expenses: ${expenses.toFixed(2)}</Text>
         </View>
       </View>
-      <Text style={styles.sectionTitle}>Transactions</Text>
-      <TouchableOpacity>
-        <Text style={styles.viewAll}>View All</Text>
-      </TouchableOpacity>
+
+      <Text style={styles.sectionTitle}>Recent Transactions</Text>
+      {/* Consider linking this to the history page */}
+      {/* <TouchableOpacity onPress={() => router.push('/(tabs)/history')}> 
+         <Text style={styles.viewAll}>View All</Text>
+      </TouchableOpacity> */}
+
       <ScrollView>
         {transactions.map((transaction) => (
           <View key={transaction.id} style={styles.transactionContainer}>
             <View style={styles.icon} />
             <View style={styles.details}>
-              <Text style={styles.category}>{transaction.category || 'Uncategorized'}</Text>
-              <Text style={styles.date}>{transaction.date || 'N/A'}</Text>
+              <Text style={styles.category}>{transaction.category}</Text>
+              <Text style={styles.date}>{transaction.date}</Text>
             </View>
-            <Text style={styles.amount}>-${(transaction.amount || 0).toFixed(2)}</Text>
+            <Text style={styles.amount}>-${transaction.amount.toFixed(2)}</Text>
           </View>
         ))}
       </ScrollView>
-      <BottomNavBar />
+            <BottomNavBar />
+      
     </View>
   );
 };
@@ -146,6 +195,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#FFFFFF',
+
   },
   header: {
     flexDirection: 'row',
@@ -202,21 +252,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B48FF',
     textAlign: 'right',
+    marginBottom: 10,
   },
   transactionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#FFF9C4',
+    backgroundColor: '#E3F2FD',
     marginVertical: 5,
     borderRadius: 8,
   },
   icon: {
     width: 30,
     height: 30,
-    backgroundColor: '#FFD700',
+    backgroundColor: '#64B5F6',
     borderRadius: 15,
     marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   details: {
     flex: 1,
@@ -228,12 +281,29 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 12,
-    color: '#000000',
+    color: '#666666',
   },
   amount: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  expenseAmount: {
+    color: '#D32F2F',
+  },
+  incomeAmount: {
+    color: '#388E3C',
+  },
+  loadingText: {
+    fontSize: 16,
     color: '#000000',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  noDataText: {
+      fontSize: 16,
+      color: '#666',
+      textAlign: 'center',
+      marginTop: 30,
   },
   loadingText: {
     fontSize: 16,
