@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 import { Colors } from '../../constants/Colors'; // Import Colors
-import BottomNavBar from '../../components/BottomNavBar'; // Import your custom BottomNavBar
+
 
 export default function TabLayout() {
   const { theme } = useTheme();
