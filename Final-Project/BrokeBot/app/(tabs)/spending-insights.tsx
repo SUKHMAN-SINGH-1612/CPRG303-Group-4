@@ -10,97 +10,97 @@ import {
 import BottomNavBar from '../../components/BottomNavBar';
 import supabase from '../../lib/supabase';
 
+// Define the type for a transaction
 interface Transaction {
   id: string;
   category: string | null;
   amount: number;
   date: string | null;
 }
-
+ 
 const SpendingInsights = () => {
   const [totalBalance, setTotalBalance] = useState(0);
   const [income, setIncome] = useState(0);
   const [expenses, setExpenses] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-  const [username, setUsername] = useState('John Wilson');
-  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState('John Wilson'); // Default username
+  const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
       } else {
         console.error('No authenticated user found');
       }
     };
-
+ 
     fetchUser();
   }, []);
-
+ 
   useEffect(() => {
-    if (!userId) return;
+    // Only fetch data if userId is available
+    if (!userId || loading) return;
 
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
+    // Fetch user name
+    const fetchUserName = async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', userId)
+        .single();
 
-        // Fetch user name
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('name')
-          .eq('id', userId)
-          .single();
-
-        if (userError) {
-          console.error('Error fetching username:', userError);
-        } else {
-          setUsername(userData?.name || 'John Wilson');
-        }
-
-        // Fetch budget
-        const { data: budgetData, error: budgetError } = await supabase
-          .from('budgets')
-          .select('total_funds')
-          .eq('user_id', userId)
-          .single();
-
-        const totalFunds = budgetData?.total_funds || 0;
-        if (budgetError) {
-          console.error('Error fetching budget:', budgetError);
-        }
-        setIncome(totalFunds);
-
-        // Fetch transactions
-        const { data: transactionData, error: transactionError } = await supabase
-          .from('transactions')
-          .select('id, category, amount, date')
-          .eq('user_id', userId);
-
-        if (transactionError) {
-          console.error('Error fetching transactions:', transactionError);
-        } else {
-          const totalExpenses = transactionData.reduce(
-            (sum, transaction) => sum + (transaction.amount || 0),
-            0
-          );
-          setTransactions(transactionData as Transaction[]);
-          setExpenses(totalExpenses);
-          setTotalBalance(totalFunds - totalExpenses);
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching username:', error);
+      } else {
+        setUsername(data?.name || 'John Wilson'); // Use fetched name or fallback
       }
     };
 
-    fetchUserData();
-  }, [userId]);
+    // Fetch budget data
+    const fetchBudget = async () => {
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('total_funds')
+        .eq('user_id', userId)
+        .single(); // Assuming one budget per user
+
+      if (error) {
+        console.error('Error fetching budget:', error);
+      } else {
+        setIncome(data?.total_funds || 0);
+      }
+    };
+
+    // Fetch transaction data
+    const fetchTransactions = async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id, category, amount, date')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error fetching transactions:', error);
+      } else {
+        const totalExpenses = data.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+        setExpenses(totalExpenses);
+        setTransactions(data as Transaction[]);
+      }
+    };
+
+    // Calculate total balance
+    const calculateBalance = () => {
+      const balance = income - expenses;
+      setTotalBalance(balance);
+    };
+
+    fetchUserName();
+    fetchBudget();
+    fetchTransactions();
+    calculateBalance();
+  }, [userId, loading, income, expenses]);
 
   if (loading) {
     return (
@@ -110,14 +110,13 @@ const SpendingInsights = () => {
       </View>
     );
   }
-
+ 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcome}>Welcome!</Text>
         <Text style={styles.username}>{username}</Text>
       </View>
-
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Total Balance</Text>
         <Text style={styles.balanceAmount}>${totalBalance.toFixed(2)}</Text>
@@ -126,12 +125,10 @@ const SpendingInsights = () => {
           <Text style={styles.expenses}>Expenses: ${expenses.toFixed(2)}</Text>
         </View>
       </View>
-
       <Text style={styles.sectionTitle}>Transactions</Text>
       <TouchableOpacity>
         <Text style={styles.viewAll}>View All</Text>
       </TouchableOpacity>
-
       <ScrollView>
         {transactions.map((transaction) => (
           <View key={transaction.id} style={styles.transactionContainer}>
@@ -148,12 +145,11 @@ const SpendingInsights = () => {
           </View>
         ))}
       </ScrollView>
-
       <BottomNavBar />
     </View>
   );
 };
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -256,5 +252,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
+ 
 export default SpendingInsights;

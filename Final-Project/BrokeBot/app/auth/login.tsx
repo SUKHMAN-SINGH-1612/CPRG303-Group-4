@@ -3,7 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'reac
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import supabase from '../../lib/supabase'; // import your supabase client
-import BottomNavBar from '../../components/BottomNavBar';
 
 export default function Login() {
   const router = useRouter();
@@ -75,9 +74,6 @@ export default function Login() {
           DON'T HAVE AN ACCOUNT? <Text style={styles.link}>SIGN UP</Text>
         </Text>
       </TouchableOpacity>
-
-      {/* Conditionally render the BottomNavBar based on isLoggedIn */}
-      {isLoggedIn && <BottomNavBar />}
     </View>
   );
 }
